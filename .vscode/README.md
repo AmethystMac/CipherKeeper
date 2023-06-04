@@ -1,2 +1,0 @@
-# CipherKeeper
-A password manager.

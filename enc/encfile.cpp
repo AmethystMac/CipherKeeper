@@ -11,9 +11,12 @@ int main() {
     //AES encryption uses a secret key of a variable    length (128-bit, 196-bit or 256-   
     //bit). This key is secretly exchanged between two parties before communication   
     //begins. DEFAULT_KEYLENGTH= 16 bytes
+    
     CryptoPP::byte key[ CryptoPP::AES::DEFAULT_KEYLENGTH ], iv[ CryptoPP::AES::BLOCKSIZE ];
-    memset( key, 0x00, CryptoPP::AES::DEFAULT_KEYLENGTH );
-    memset( iv, 0x00, CryptoPP::AES::BLOCKSIZE );
+    // memset( key, 0x00, CryptoPP::AES::DEFAULT_KEYLENGTH );
+    // memset( iv, 0x00, CryptoPP::AES::BLOCKSIZE );
+
+    std::cout << key << " lol\n";
 
     //
     // String and Sink setup

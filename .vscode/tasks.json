@@ -9,7 +9,7 @@
             "-std=c++20",
             "-o",
             "output",
-            "encrypt2.cpp",
+            "enc/encf.cpp",
             "-I/usr/lib/cpplib/cryptopp",
             "-lcryptopp"
             ],
