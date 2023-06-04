@@ -1,2 +1,6 @@
 # VSCode files
 .vscode/*
+
+# I/O Files
+input.txt
+output
