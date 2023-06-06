@@ -5,7 +5,7 @@ void encryptPassword() {
 }
 
 // Function to verify the saved password against the one 
-bool verifyPassword(const std::string& password, const std::string& storedSalt, const std::string& storedHash) {
+bool verifyPassword(const std::string &password, const std::string &storedSalt, const std::string &storedHash) {
     CryptoPP::PKCS5_PBKDF2_HMAC<CryptoPP::SHA256> pbkdf2;
     CryptoPP::SecByteBlock derivedKey(storedHash.size());
 

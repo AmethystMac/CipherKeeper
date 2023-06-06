@@ -31,14 +31,20 @@ int main() {
     CryptoPP::RSA::PublicKey publicKey(params);
 
     // Message to encrypt
-    std::string key = "AYYYY THIS SHIT IS FREAKIN COOL";
+    std::string key = "secretkey";
+
+    // Randomizing key data
+    // key.resize(CryptoPP::AES::DEFAULT_KEYLENGTH);
+    // rng.GenerateBlock(reinterpret_cast<CryptoPP::byte*>(key.data()), key.size());
 
     std::string encryptedKey = encryptAESKey(publicKey, key, rng);
     std::string decryptedKey = decryptAESKey(privateKey, encryptedKey, rng);
 
     // Base64 encoding
-    std::string encoded;
-    CryptoPP::StringSource(decryptedKey, true, new CryptoPP::Base64Encoder(new CryptoPP::StringSink(encoded), false));
+    std::string encoded, encoded2, encoded3;
+    // CryptoPP::StringSource(key, true, new CryptoPP::Base64Encoder(new CryptoPP::StringSink(encoded1), false));
+    CryptoPP::StringSource(encryptedKey, true, new CryptoPP::Base64Encoder(new CryptoPP::StringSink(encoded), false));
+    // CryptoPP::StringSource(decryptedKey, true, new CryptoPP::Base64Encoder(new CryptoPP::StringSink(encoded3), false));
 
     // Output
     std::cout << "Original Message: " << key << std::endl;

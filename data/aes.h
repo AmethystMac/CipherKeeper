@@ -5,5 +5,5 @@
 #include "cryptopp/filters.h"
 #include "cryptopp/files.h"
 
-void EncryptStream(const std::string &inputFile, const std::string &outputFile, const std::string &key);
-void DecryptStream(const std::string &inputFile, const std::string &outputFile, const std::string &key);
+std::string encryptStream(const std::string &plainStream, const std::string &key);
+std::string decryptStream(const std::string &encryptedStream, const std::string &key);

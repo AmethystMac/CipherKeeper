@@ -8,4 +8,3 @@
 #define cbyte unsigned char
 
 bool verifyPassword(const std::string& password, const std::string& storedSalt, const std::string& storedHash);
-int main();
