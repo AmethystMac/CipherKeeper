@@ -1,4 +1,5 @@
 // Header file for RSA to encrypt AES Key
+#pragma once
 
 #include <iostream>
 

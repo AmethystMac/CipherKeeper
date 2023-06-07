@@ -1,9 +1,12 @@
+#pragma once
+
 #include <iostream>
-#include <cryptopp/osrng.h>
-#include <cryptopp/secblock.h>
-#include <cryptopp/pwdbased.h>
-#include <cryptopp/filters.h>
-#include <cryptopp/hex.h>
+
+#include "cryptopp/osrng.h"
+#include "cryptopp/secblock.h"
+#include "cryptopp/pwdbased.h"
+#include "cryptopp/filters.h"
+#include "cryptopp/hex.h"
 
 #define cbyte unsigned char
 
