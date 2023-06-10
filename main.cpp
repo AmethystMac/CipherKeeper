@@ -3,6 +3,35 @@
 #include "./data/aes.h"
 #include "./data/rsak.h"
 
+std::string encrypt(std::string &plainText, std::string &key, CryptoPP::RSA::PublicKey &publicKey, CryptoPP::AutoSeededRandomPool &rng) {
+    std::string encryptedPlainText = encryptStream(plainText, key);
+    std::string encryptedKey = encryptAESKey(publicKey, key, rng);
+
+    std::string delim = "$$@-@^^-**&";
+    std::string text = encryptedKey + delim + encryptedPlainText;
+    std::string encryptedText = encryptStream(text, key);
+
+    return encryptedText;
+}
+
+std::string decrypt(std::string &encryptedText, std::string &key, CryptoPP::RSA::PrivateKey &privateKey, CryptoPP::AutoSeededRandomPool &rng) {
+    std::string decryptedText = decryptStream(encryptedText, key);
+
+    std::string delim = "$$@-@^^-**&";
+    int index = decryptedText.find(delim);
+    if(index != std::string::npos) {
+        std::string encryptedKey = decryptedText.substr(0, index);
+        std::string encryptedPlainText = decryptedText.substr(index + delim.size(), decryptedText.size());
+
+        std::string decryptedKey = decryptAESKey(privateKey, encryptedKey, rng);
+        std::string decryptedPlainText = decryptStream(encryptedPlainText, key);
+
+        return decryptedPlainText;
+    }
+
+    return "";
+}
+
 int main() {
     CryptoPP::AutoSeededRandomPool rng;
     CryptoPP::InvertibleRSAFunction params;
@@ -11,28 +40,19 @@ int main() {
     CryptoPP::RSA::PrivateKey privateKey(params);
     CryptoPP::RSA::PublicKey publicKey(params);
 
-    std::string plainText = "this is matthew";
+    std::string plainText = "This is the plaintext";
     std::string key = "hello this key ";
+    
+    std::string encryptedText = encrypt(plainText, key, publicKey, rng);
+    std::string decryptedPlainText = decrypt(encryptedText, key, privateKey, rng);
 
-    std::string encryptedText = encryptStream(plainText, key);
 
-    std::string encryptedKey = encryptAESKey(publicKey, key, rng);
-
-    std::string decryptedKey = decryptAESKey(privateKey, encryptedKey, rng);
-
-    std::string decryptedText = decryptStream(encryptedText, key);
-
-    std::string encoded1, encoded2;
+    std::string encoded1, encoded2, encoded3;
     CryptoPP::StringSource(encryptedText, true, new CryptoPP::Base64Encoder(new CryptoPP::StringSink(encoded1), false));
-    CryptoPP::StringSource(encryptedKey, true, new CryptoPP::Base64Encoder(new CryptoPP::StringSink(encoded2), false));
 
-    std::cout << "Original Text: " << plainText << "\n";
-    std::cout << "Original Key: " << key << "\n\n";
+    std::cout << "Text: " << encoded1 << "\n\n";
 
-    std::cout << "Encrypted Text: " << encoded1 << "\n";
-    std::cout << "Encrypted Key (Base64): " << encoded2 << std::endl;
-    std::cout << "Decrypted Key: " << decryptedKey << std::endl;
-    std::cout << "Decrypted Text: " << decryptedText << "\n";
+    std::cout << "Decrypted Text: " << decryptedPlainText << "\n";
 
     return 0;
 }
