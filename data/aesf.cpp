@@ -1,29 +1,20 @@
+// AES-256 to encrypt file 
 #include "aesf.h"
 
-void encryptFile(std::string &inputFile, std::string &outputFile, std::string &key) {
+// Encryption function to encrypt the file and returns void
+void encryptFile(std::string &fileLocation, std::string &key) {
+    // Create an instance of AES Encryption with a key and it's size and using CBC to encrypt the text using the AES encryption object
     CryptoPP::AES::Encryption aesEncryption(reinterpret_cast<const CryptoPP::byte*>(key.data()), CryptoPP::AES::DEFAULT_KEYLENGTH);
     CryptoPP::CBC_Mode_ExternalCipher::Encryption cbcEncryption(aesEncryption, reinterpret_cast<const CryptoPP::byte*>(key.data()));
 
-    CryptoPP::FileSource fileSource(inputFile.c_str(), true, new CryptoPP::StreamTransformationFilter(cbcEncryption, new CryptoPP::FileSink(outputFile.c_str())));
+    // Encrypting the input file by providing the CBC Encryption object
+    CryptoPP::FileSource fileSource(fileLocation.c_str(), true, new CryptoPP::StreamTransformationFilter(cbcEncryption, new CryptoPP::FileSink(fileLocation.c_str())));
 }
 
-void decryptFile(std::string &inputFile, std::string &outputFile, std::string &key) {
+// Decryption function to decrypt the file and returns void
+void decryptFile(std::string &fileLocation, std::string &key) {
     CryptoPP::AES::Decryption aesDecryption(reinterpret_cast<const CryptoPP::byte*>(key.data()), CryptoPP::AES::DEFAULT_KEYLENGTH);
     CryptoPP::CBC_Mode_ExternalCipher::Decryption cbcDecryption(aesDecryption, reinterpret_cast<const CryptoPP::byte*>(key.data()));
 
-    CryptoPP::FileSource fileSource(inputFile.c_str(), true, new CryptoPP::StreamTransformationFilter(cbcDecryption, new CryptoPP::FileSink(outputFile.c_str())));
-}
-
-int main() {
-    std::string inputFile = "input.txt";
-    std::string encryptedFile = "encrypted.bin";
-    std::string decryptedFile = "decrypted.txt";
-    std::string key = "mysecretpassword";
-
-    EncryptFile(inputFile, encryptedFile, key);
-    DecryptFile(encryptedFile, decryptedFile, key);
-
-    std::cout << "File encryption and decryption completed." << std::endl;
-
-    return 0;
+    CryptoPP::FileSource fileSource(fileLocation.c_str(), true, new CryptoPP::StreamTransformationFilter(cbcDecryption, new CryptoPP::FileSink(fileLocation.c_str())));
 }

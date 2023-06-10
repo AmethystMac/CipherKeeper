@@ -1,3 +1,4 @@
+// Header file for AES-256 to encrypt file
 #pragma once
 
 #include <iostream>
@@ -7,5 +8,5 @@
 #include "cryptopp/filters.h"
 #include "cryptopp/files.h"
 
-void EncryptFile(const std::string& inputFile, const std::string& outputFile, const std::string& key);
-void DecryptFile(const std::string& inputFile, const std::string& outputFile, const std::string& key);
+void encryptFile(std::string& inputFile, std::string& key);
+void decryptFile(std::string& inputFile, std::string& key);

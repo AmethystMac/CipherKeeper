@@ -25,23 +25,3 @@ std::string decryptStream(std::string &encryptedStream, std::string &key) {
 
     return decryptedStream;
 }
-
-// int main() {
-//     std::string plainText = "hmmmm";
-//     std::string key = "mysecretpassword";
-
-//     std::cout << plainText << "\n";
-
-//     std::string encryptedText = encryptStream(plainText, key);
-
-//     std::string encoded;
-//     CryptoPP::StringSource(encryptedText, true, new CryptoPP::Base64Encoder(new CryptoPP::StringSink(encoded), false));
-
-//     std::cout << encoded << "\n";
-
-//     std::string decryptedText = decryptStream(encryptedText, key);
-
-//     std::cout << decryptedText << "\n";
-
-//     return 0;
-// }
