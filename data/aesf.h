@@ -8,5 +8,5 @@
 #include "cryptopp/filters.h"
 #include "cryptopp/files.h"
 
-void encryptFile(std::string& inputFile, std::string& key);
-void decryptFile(std::string& inputFile, std::string& key);
+void encryptFile(std::string &inFileLocation, std::string &outFileLocation, std::string &key);
+void decryptFile(std::string &inFileLocation, std::string &outFileLocation, std::string &key);
