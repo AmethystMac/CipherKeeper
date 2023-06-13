@@ -1,7 +1,5 @@
-// Header file for AES-256 to encrypt file
+// Header for AES-256 to encrypt a file
 #pragma once
-
-#include <iostream>
 
 #include "cryptopp/aes.h"
 #include "cryptopp/modes.h"

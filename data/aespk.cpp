@@ -1,7 +1,8 @@
+// AES to encrypt RSA Private Key
 #include "aespk.h"
 
-// Function to encrypt a private key object
-std::string encryptPrivateKey(const CryptoPP::RSA::PrivateKey& privateKey, const std::string& encryptionKey) {
+// Encrypt RSA private key object, returns encrypted string
+std::string encryptPrivateKey(CryptoPP::RSA::PrivateKey &privateKey, std::string &key) {
     std::string serializedKey;
     privateKey.Save(CryptoPP::StringSink(serializedKey).Ref());
 
@@ -11,7 +12,7 @@ std::string encryptPrivateKey(const CryptoPP::RSA::PrivateKey& privateKey, const
     rng.GenerateBlock(iv, iv.size());
 
     // Create an AES encryption object
-    CryptoPP::AES::Encryption aesEncryption(reinterpret_cast<const CryptoPP::byte*>(encryptionKey.data()), CryptoPP::AES::DEFAULT_KEYLENGTH);
+    CryptoPP::AES::Encryption aesEncryption(reinterpret_cast<const CryptoPP::byte*>(key.data()), CryptoPP::AES::DEFAULT_KEYLENGTH);
     CryptoPP::CBC_Mode_ExternalCipher::Encryption cbcEncryption(aesEncryption, iv);
 
     // Encrypt the serialized private key
@@ -19,21 +20,22 @@ std::string encryptPrivateKey(const CryptoPP::RSA::PrivateKey& privateKey, const
     CryptoPP::StringSource(serializedKey, true, new CryptoPP::StreamTransformationFilter(cbcEncryption, new CryptoPP::StringSink(encryptedKey)));
 
     // Combine the IV and encrypted key
-    std::string result;
-    result.append(reinterpret_cast<const char*>(iv.data()), iv.size());
-    result += encryptedKey;
+    std::string encryptedStream;
+    encryptedStream.append(reinterpret_cast<const char*>(iv.data()), iv.size());
+    encryptedStream += encryptedKey;
 
-    return result;
+    return encryptedStream;
 }
 
-CryptoPP::RSA::PrivateKey decryptPrivateKey(const std::string& encryptedData, const std::string& encryptionKey) {
-    // Extract the IV and encrypted key from the combined result string
+// Encrypt RSA private key object, returns CryptoPP::RSA::PrivateKey object
+CryptoPP::RSA::PrivateKey decryptPrivateKey(std::string &encryptedStream, std::string &key) {
+    // Extract the IV and encrypted key from the combined encryptedStream string
     const size_t ivSize = CryptoPP::AES::BLOCKSIZE;
-    const std::string iv = encryptedData.substr(0, ivSize);
-    const std::string encryptedKey = encryptedData.substr(ivSize);
+    const std::string iv = encryptedStream.substr(0, ivSize);
+    const std::string encryptedKey = encryptedStream.substr(ivSize);
 
     // Prepare decryption objects
-    CryptoPP::AES::Decryption aesDecryption(reinterpret_cast<const CryptoPP::byte*>(encryptionKey.data()), CryptoPP::AES::DEFAULT_KEYLENGTH);
+    CryptoPP::AES::Decryption aesDecryption(reinterpret_cast<const CryptoPP::byte*>(key.data()), CryptoPP::AES::DEFAULT_KEYLENGTH);
     CryptoPP::CBC_Mode_ExternalCipher::Decryption cbcDecryption(aesDecryption, reinterpret_cast<const CryptoPP::byte*>(iv.data()));
 
     // Decrypt the encrypted key

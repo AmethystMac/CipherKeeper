@@ -15,14 +15,15 @@ void encrypt(std::string &inFileLocation, std::string &outFileLocation, std::str
     CryptoPP::RSA::PrivateKey privateKey(params);
     CryptoPP::RSA::PublicKey publicKey(params);
 
-    std::string genKey;
-    genKey.resize(CryptoPP::AES::DEFAULT_KEYLENGTH);
-    rng.GenerateBlock(reinterpret_cast<CryptoPP::byte*>(genKey.data()), CryptoPP::AES::DEFAULT_KEYLENGTH);
+    std::string randKey;
+    randKey.resize(CryptoPP::AES::DEFAULT_KEYLENGTH);
+    rng.GenerateBlock(reinterpret_cast<CryptoPP::byte*>(randKey.data()), CryptoPP::AES::DEFAULT_KEYLENGTH);
 
-    std::string encryptedPlainText = encryptStream(plainText, genKey);
-    std::string encryptedKey = encryptAESKey(genKey, publicKey, rng);
+    std::string encryptedPlainText = encryptStream(plainText, randKey);
+    std::string encryptedKey = encryptAESKey(randKey, publicKey);
 
-    std::string encryptedPrivateKey = encryptPrivateKey(privateKey, encryptedPlainText + encryptedKey);
+    std::string k = encryptedPlainText + encryptedKey;
+    std::string encryptedPrivateKey = encryptPrivateKey(privateKey, k);
 
     std::string delim1 = "$$@-@^^-**&", delim2 = "&##-%%!-!((";
     std::string text = encryptedKey + delim1 + encryptedPlainText + delim2 + encryptedPrivateKey;
@@ -63,9 +64,9 @@ std::string decrypt(std::string &inFileLocation, std::string &outFileLocation, s
         std::string encryptedPlainText = decryptedText.substr(index1 + delim1.size(),  index2 - (index1 + delim1.size()));
         std::string encryptedPrivateKey = decryptedText.substr(index2 + delim2.size(), decryptedText.size() - (index2 + delim2.size()));
     
-
-        CryptoPP::RSA::PrivateKey privateKey = decryptPrivateKey(encryptedPrivateKey, encryptedPlainText + encryptedKey);
-        std::string decryptedKey = decryptAESKey(encryptedKey, privateKey, rng);
+        std::string k = encryptedPlainText + encryptedKey;
+        CryptoPP::RSA::PrivateKey privateKey = decryptPrivateKey(encryptedPrivateKey, k);
+        std::string decryptedKey = decryptAESKey(encryptedKey, privateKey);
         std::string decryptedPlainText = decryptStream(encryptedPlainText, decryptedKey);
 
         return decryptedPlainText;
@@ -80,7 +81,7 @@ int main() {
     
     std::string inputFileLocation = "./file1.txt", encryptFileLocation = "./file2.bin", decryptFileLocation = "./file3.txt";
 
-    encrypt(inputFileLocation, encryptFileLocation, plainText, key);
+    // encrypt(inputFileLocation, encryptFileLocation, plainText, key);
     std::string decryptedPlainText = decrypt(encryptFileLocation, decryptFileLocation, key);
 
     // std::string encoded;

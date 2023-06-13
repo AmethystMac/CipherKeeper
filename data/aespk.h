@@ -1,6 +1,5 @@
+// Header for AES to encrypt RSA Private Key
 #pragma once
-
-#include <iostream>
 
 #include "cryptopp/aes.h"
 #include "cryptopp/rsa.h"
@@ -11,5 +10,5 @@
 #include "cryptopp/secblock.h"
 #include "cryptopp/base64.h"
 
-std::string encryptPrivateKey(const CryptoPP::RSA::PrivateKey& privateKey, const std::string& encryptionKey);
-CryptoPP::RSA::PrivateKey decryptPrivateKey(const std::string& encryptedData, const std::string& encryptionKey);
+std::string encryptPrivateKey(CryptoPP::RSA::PrivateKey &privateKey, std::string &encryptionKey);
+CryptoPP::RSA::PrivateKey decryptPrivateKey(std::string& encryptedData, std::string &encryptionKey);

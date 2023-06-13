@@ -1,6 +1,5 @@
+// Header for AES to encrypt the plaintext
 #pragma once
-
-#include <iostream>
 
 #include "cryptopp/aes.h"
 #include "cryptopp/modes.h"
