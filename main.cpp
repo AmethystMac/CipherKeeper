@@ -4,6 +4,7 @@
 
 #include "./data/aes.h"
 #include "./data/rsak.h"
+#include "./data/aespk.h"
 #include "./data/aesf.h"
 
 void encrypt(std::string &inFileLocation, std::string &outFileLocation, std::string &plainText, std::string &key) {
@@ -14,11 +15,17 @@ void encrypt(std::string &inFileLocation, std::string &outFileLocation, std::str
     CryptoPP::RSA::PrivateKey privateKey(params);
     CryptoPP::RSA::PublicKey publicKey(params);
 
-    std::string encryptedPlainText = encryptStream(plainText, key);
-    std::string encryptedKey = encryptAESKey(publicKey, key, rng);
+    std::string genKey;
+    genKey.resize(CryptoPP::AES::DEFAULT_KEYLENGTH);
+    rng.GenerateBlock(reinterpret_cast<CryptoPP::byte*>(genKey.data()), CryptoPP::AES::DEFAULT_KEYLENGTH);
+
+    std::string encryptedPlainText = encryptStream(plainText, genKey);
+    std::string encryptedKey = encryptAESKey(genKey, publicKey, rng);
+
+    std::string encryptedPrivateKey = encryptPrivateKey(privateKey, encryptedPlainText + encryptedKey);
 
     std::string delim1 = "$$@-@^^-**&", delim2 = "&##-%%!-!((";
-    std::string text = encryptedKey + delim1 + encryptedPlainText;
+    std::string text = encryptedKey + delim1 + encryptedPlainText + delim2 + encryptedPrivateKey;
     std::string encryptedText = encryptStream(text, key);
 
     std::ofstream inputFile;
@@ -49,15 +56,17 @@ std::string decrypt(std::string &inFileLocation, std::string &outFileLocation, s
 
     std::string decryptedText = decryptStream(encryptedText, key);
 
-    std::string delim1 = "$$@-@^^-**&", delim2 = "";
-    int index = decryptedText.find(delim1);
-    if(index != std::string::npos) {
-        std::string encryptedKey = decryptedText.substr(0, index);
-        std::string encryptedPlainText = decryptedText.substr(index + delim1.size(), decryptedText.size());
+    std::string delim1 = "$$@-@^^-**&", delim2 = "&##-%%!-!((";
+    int index1 = decryptedText.find(delim1), index2 = decryptedText.find(delim2);
+    if(index1 != std::string::npos) {
+        std::string encryptedKey = decryptedText.substr(0, index1);
+        std::string encryptedPlainText = decryptedText.substr(index1 + delim1.size(),  index2 - (index1 + delim1.size()));
+        std::string encryptedPrivateKey = decryptedText.substr(index2 + delim2.size(), decryptedText.size() - (index2 + delim2.size()));
+    
 
-        std::cout << encryptedKey << "\n";
-        std::string decryptedKey = decryptAESKey(privateKey, encryptedKey, rng);
-        std::string decryptedPlainText = decryptStream(encryptedPlainText, key);
+        CryptoPP::RSA::PrivateKey privateKey = decryptPrivateKey(encryptedPrivateKey, encryptedPlainText + encryptedKey);
+        std::string decryptedKey = decryptAESKey(encryptedKey, privateKey, rng);
+        std::string decryptedPlainText = decryptStream(encryptedPlainText, decryptedKey);
 
         return decryptedPlainText;
     }
@@ -67,11 +76,11 @@ std::string decrypt(std::string &inFileLocation, std::string &outFileLocation, s
 
 int main() {
     std::string plainText = "This is the plaintext";
-    std::string key = "hello this key ";
+    std::string key = "this key is big";
     
     std::string inputFileLocation = "./file1.txt", encryptFileLocation = "./file2.bin", decryptFileLocation = "./file3.txt";
-    encrypt(inputFileLocation, encryptFileLocation, plainText, key);
 
+    encrypt(inputFileLocation, encryptFileLocation, plainText, key);
     std::string decryptedPlainText = decrypt(encryptFileLocation, decryptFileLocation, key);
 
     // std::string encoded;
