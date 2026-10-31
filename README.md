@@ -11,7 +11,8 @@ The 2023 Crypto++ prototype is kept in git history under the `legacy-prototype` 
 
 You need:
 - **Windows:** Visual Studio 2022 with the "Desktop development with C++" workload (includes CMake and Ninja).
-- **Linux:** a C++20 compiler, CMake ≥ 3.25 and Ninja.
+- **Linux:** a C++20 compiler, CMake ≥ 3.25, Ninja, and the autotools vcpkg needs to build libsodium
+  (`sudo apt install ninja-build autoconf autoconf-archive automake libtool` on Debian/Ubuntu).
 - **vcpkg** (all platforms), with `VCPKG_ROOT` pointing at it:
 
 ```bash

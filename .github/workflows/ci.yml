@@ -32,7 +32,7 @@ jobs:
 
       - name: Install Linux tools
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y ninja-build clang-format clang-tidy
+        run: sudo apt-get update && sudo apt-get install -y ninja-build clang-format clang-tidy autoconf autoconf-archive automake libtool
 
       - name: Check formatting
         if: runner.os == 'Linux'
