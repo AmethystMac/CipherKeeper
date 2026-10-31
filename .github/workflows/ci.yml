@@ -26,7 +26,6 @@ jobs:
             preset: asan
             extra-args: -DCK_CLANG_TIDY=ON
     env:
-      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
       VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg-cache
     steps:
       - uses: actions/checkout@v4
@@ -53,6 +52,8 @@ jobs:
       - name: Fetch vcpkg at the manifest baseline
         shell: bash
         run: |
+          VCPKG_ROOT="$GITHUB_WORKSPACE/vcpkg"
+          echo "VCPKG_ROOT=$VCPKG_ROOT" >> "$GITHUB_ENV"
           mkdir -p "$VCPKG_DEFAULT_BINARY_CACHE"
           baseline=$(jq -r '."builtin-baseline"' vcpkg.json)
           git init -q "$VCPKG_ROOT"

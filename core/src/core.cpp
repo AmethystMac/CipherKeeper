@@ -10,13 +10,17 @@
 
 namespace ck {
 
-    bool initialize() noexcept {
-        // sodium_init() returns 0 on first success, 1 if already initialized, -1 on failure.
-        return sodium_init() >= 0;
-    }
+bool initialize() noexcept {
+    // sodium_init() returns 0 on first success, 1 if already initialized, -1 on failure.
+    return sodium_init() >= 0;
+}
 
-    std::string_view version() noexcept { return CK_VERSION; }
+std::string_view version() noexcept {
+    return CK_VERSION;
+}
 
-    LibraryVersions library_versions() noexcept { return {sodium_version_string(), sqlite3_libversion()}; }
+LibraryVersions library_versions() noexcept {
+    return {sodium_version_string(), sqlite3_libversion()};
+}
 
 } // namespace ck
