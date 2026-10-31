@@ -1,0 +1,8 @@
+# Catch2's TEST_CASE/REQUIRE macros expand to static registrars and do-while loops.
+InheritParentConfig: true
+Checks: >
+  -cert-err58-cpp,
+  -cppcoreguidelines-avoid-do-while,
+  -cppcoreguidelines-avoid-non-const-global-variables,
+  -misc-use-anonymous-namespace,
+  -readability-function-cognitive-complexity
