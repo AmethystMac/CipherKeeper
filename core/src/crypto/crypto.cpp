@@ -1,6 +1,6 @@
-#include "cipherkeeper/crypto.hpp"
+#include "cipherkeeper/crypto/crypto.hpp"
 
-#include "crypto_internal.hpp"
+#include "crypto/crypto_internal.hpp"
 
 #include <sodium.h>
 

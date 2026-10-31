@@ -1,9 +1,12 @@
 # CipherKeeper
 
-A zero-knowledge password manager written in C++20. Each entry is stored either local-only or end-to-end
-encrypted in the cloud and synced across your devices.
+**Every secret sealed. Only you hold the key.**
 
-> Early development (Phase 0 done). There is no working vault yet. Don't store real passwords in it.
+Keep a password on this device alone, or sync it end-to-end encrypted across all of yours. Either way, nobody
+else can read it, not even the server.
+
+> Early development (Phase 1 in progress). The core library can create and open encrypted vaults, but no front
+> end uses it yet. Don't store real passwords in it.
 
 The 2023 Crypto++ prototype is kept in git history under the `legacy-prototype` tag.
 

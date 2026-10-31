@@ -1,6 +1,6 @@
 #include "test_util.hpp"
 
-#include <cipherkeeper/secure_buffer.hpp>
+#include <cipherkeeper/crypto/secure_buffer.hpp>
 
 #include <catch2/catch_test_macros.hpp>
 

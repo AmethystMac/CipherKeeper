@@ -1,7 +1,7 @@
-#include "crypto_internal.hpp"
+#include "crypto/crypto_internal.hpp"
 #include "test_util.hpp"
 
-#include <cipherkeeper/crypto.hpp>
+#include <cipherkeeper/crypto/crypto.hpp>
 
 #include <catch2/catch_test_macros.hpp>
 

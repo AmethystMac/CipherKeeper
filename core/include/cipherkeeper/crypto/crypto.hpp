@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cipherkeeper/secure_buffer.hpp"
+#include "cipherkeeper/crypto/secure_buffer.hpp"
 
 #include <array>
 #include <cstddef>

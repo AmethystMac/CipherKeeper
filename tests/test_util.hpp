@@ -1,12 +1,15 @@
 #pragma once
 
-#include <cipherkeeper/secure_buffer.hpp>
+#include <cipherkeeper/crypto/secure_buffer.hpp>
+#include <cipherkeeper/model/item_id.hpp>
 
 #include <algorithm>
 #include <cstddef>
+#include <filesystem>
 #include <span>
 #include <stdexcept>
 #include <string_view>
+#include <system_error>
 #include <vector>
 
 namespace ck::test {
@@ -48,5 +51,27 @@ inline SecureBuffer secret_from_hex(std::string_view hex) {
 inline bool same_bytes(std::span<const std::byte> a, std::span<const std::byte> b) {
     return std::ranges::equal(a, b);
 }
+
+// A fresh directory under the system temp dir, removed with everything in it on destruction. Test vaults live
+// here so they are never written into the source tree.
+class TempDir {
+  public:
+    TempDir() : path_(std::filesystem::temp_directory_path() / ("ck-test-" + ItemId::generate().to_string())) {
+        std::filesystem::create_directories(path_);
+    }
+    TempDir(const TempDir&) = delete;
+    TempDir& operator=(const TempDir&) = delete;
+    TempDir(TempDir&&) = delete;
+    TempDir& operator=(TempDir&&) = delete;
+    ~TempDir() {
+        std::error_code ignored;
+        std::filesystem::remove_all(path_, ignored);
+    }
+
+    [[nodiscard]] const std::filesystem::path& path() const noexcept { return path_; }
+
+  private:
+    std::filesystem::path path_;
+};
 
 } // namespace ck::test

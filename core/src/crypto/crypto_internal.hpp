@@ -4,7 +4,7 @@
 // libsodium with fixed vectors. Production code must use crypto.hpp: a caller-chosen nonce is how nonce reuse
 // happens.
 
-#include "cipherkeeper/crypto.hpp"
+#include "cipherkeeper/crypto/crypto.hpp"
 
 #include <span>
 #include <vector>
