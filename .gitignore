@@ -1,6 +1,20 @@
-# VSCode files
-.vscode/*
+# Build output
+build/
+out/
+vcpkg_installed/
+compile_commands.json
+CMakeUserPresets.json
 
-# I/O Files
-input.txt
-output
+# Editors
+.vscode/*
+.vs/
+.idea/
+
+# Vaults and backups must never be committed, not even test ones
+*.ckvault
+*.ckvault-wal
+*.ckvault-shm
+*.ckbackup
+*.db
+*.sqlite
+*.bin
