@@ -1,6 +1,8 @@
-# Catch2's TEST_CASE/REQUIRE macros expand to static registrars and do-while loops.
+# Catch2's TEST_CASE/REQUIRE macros expand to static registrars and do-while loops, and the optional-access check
+# can't see that a failed REQUIRE(opt.has_value()) ends the test.
 InheritParentConfig: true
 Checks: >
+  -bugprone-unchecked-optional-access,
   -cert-err58-cpp,
   -cppcoreguidelines-avoid-do-while,
   -cppcoreguidelines-avoid-non-const-global-variables,

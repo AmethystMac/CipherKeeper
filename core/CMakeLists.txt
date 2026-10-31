@@ -3,6 +3,8 @@ find_package(unofficial-sqlite3 CONFIG REQUIRED)
 
 add_library(cipherkeeper_core
     src/core.cpp
+    src/crypto.cpp
+    src/secure_buffer.cpp
 )
 add_library(cipherkeeper::core ALIAS cipherkeeper_core)
 
