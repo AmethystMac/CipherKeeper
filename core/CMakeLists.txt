@@ -9,6 +9,9 @@ add_library(cipherkeeper_core
     src/core.cpp
     src/crypto/crypto.cpp
     src/crypto/secure_buffer.cpp
+    src/crypto/secure_string.cpp
+    src/model/item.cpp
+    src/model/item_codec.cpp
     src/model/item_id.cpp
     src/storage/sqlite.cpp
     src/storage/vault.cpp
