@@ -324,6 +324,7 @@ TEST_CASE("decode never fails in any other way on corrupted bodies") {
     // Each single-byte corruption must either decode or throw ItemFormatError. Under ASan this also proves the
     // decoder never reads outside the body.
     const ck::SecureBuffer original = ck::encode_item(full_login());
+    std::size_t rejected = 0;
     for (std::size_t i = 0; i < original.size(); ++i) {
         for (const std::byte flip : {std::byte{0x01}, std::byte{0x80}, std::byte{0xFF}}) {
             ck::SecureBuffer body = ck::SecureBuffer::copy_of(original.bytes());
@@ -332,8 +333,9 @@ TEST_CASE("decode never fails in any other way on corrupted bodies") {
             try {
                 (void)ck::decode_item(body.bytes());
             } catch (const ItemFormatError&) {
-                // expected for most corruptions
+                ++rejected; // expected for most corruptions
             }
         }
     }
+    CHECK(rejected > 0);
 }

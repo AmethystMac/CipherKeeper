@@ -22,7 +22,10 @@ add_library(ck_options INTERFACE)
 if(MSVC)
     target_compile_options(ck_options INTERFACE /W4 /WX /permissive- /utf-8)
 else()
-    target_compile_options(ck_options INTERFACE -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Wshadow -Werror)
+    # -Wno-missing-field-initializers: GCC warns about every field a C++20 designated initializer leaves out, even
+    # though leaving them out (so they're value-initialized) is the point.
+    target_compile_options(ck_options INTERFACE -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Wshadow
+                                                -Wno-missing-field-initializers -Werror)
 endif()
 
 if(CK_SANITIZE)
