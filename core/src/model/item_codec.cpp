@@ -135,7 +135,7 @@ std::array<std::byte, 4> le32(std::size_t value) {
 using Parts = std::initializer_list<std::span<const std::byte>>;
 
 // Calls emit(tag, parts) for every field of `item` in canonical order. A field's payload is its parts joined.
-template <typename Emit> void for_each_field(const Item& item, Emit&& emit) {
+template <typename Emit> void for_each_field(const Item& item, const Emit& emit) {
     for (const FieldDef<Item>& def : common_fields) {
         const SecureString& value = item.*def.member;
         if (!value.empty()) {

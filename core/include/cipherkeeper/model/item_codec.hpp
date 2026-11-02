@@ -4,6 +4,7 @@
 #include "cipherkeeper/model/item.hpp"
 
 #include <cstddef>
+#include <cstdint>
 #include <span>
 #include <stdexcept>
 #include <string>
@@ -15,7 +16,7 @@ namespace ck {
 // Thrown by decode_item. Messages never contain item contents.
 class ItemFormatError : public std::runtime_error {
   public:
-    enum class Kind {
+    enum class Kind : std::uint8_t {
         unsupported_version, // written by a newer CipherKeeper
         malformed,           // anything else: bad magic, truncation, unknown or duplicate fields, trailing bytes
     };

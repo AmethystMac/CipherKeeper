@@ -46,7 +46,8 @@ struct LoginData {
 
 // A secure note has no fields of its own; its text is Item::notes.
 struct SecureNoteData {
-    [[nodiscard]] SecureNoteData clone() const { return {}; }
+    // Not static: Item::clone calls clone() on whichever alternative the variant holds.
+    [[nodiscard]] SecureNoteData clone() const { return {}; } // NOLINT(readability-convert-member-functions-to-static)
     friend bool operator==(const SecureNoteData&, const SecureNoteData&) = default;
 };
 

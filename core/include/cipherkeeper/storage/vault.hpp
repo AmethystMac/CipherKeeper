@@ -20,7 +20,7 @@ namespace ck {
 // std::nullopt instead. Messages never contain secrets or item contents.
 class VaultError : public std::runtime_error {
   public:
-    enum class Kind {
+    enum class Kind : std::uint8_t {
         not_a_vault,         // not a SQLite file, or a SQLite file that isn't a CipherKeeper vault
         unsupported_version, // a vault format this build can't read (e.g. written by a newer version)
         corrupt,             // a vault whose structure or contents fail validation or authentication

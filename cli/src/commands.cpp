@@ -84,7 +84,7 @@ std::vector<SecureString> split_list(std::string_view text, FieldKind kind) {
     std::vector<SecureString> entries;
     const auto is_separator = [kind](char c) { return kind == FieldKind::comma_list ? c == ',' : is_space(c); };
     while (!text.empty()) {
-        const auto end = std::ranges::find_if(text, is_separator);
+        const std::string_view::iterator end = std::ranges::find_if(text, is_separator);
         const auto length = static_cast<std::size_t>(end - text.begin());
         const std::string_view entry = trim(text.substr(0, length));
         if (!entry.empty()) {
@@ -256,7 +256,15 @@ ItemId find_item(Console& console, const Vault& vault, Args words) {
         }
     });
 
-    const std::vector<Match>& matches = !by_id.empty() ? by_id : !by_title.empty() ? by_title : by_part;
+    const std::vector<Match>& matches = [&]() -> const std::vector<Match>& {
+        if (!by_id.empty()) {
+            return by_id;
+        }
+        if (!by_title.empty()) {
+            return by_title;
+        }
+        return by_part;
+    }();
     if (matches.empty()) {
         throw Failure(Exit::failure, "no item matches " + in_quotes(query));
     }
