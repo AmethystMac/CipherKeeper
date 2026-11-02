@@ -61,9 +61,12 @@ void argon2id(std::span<std::byte> out, std::span<const std::byte> password, std
     if (password.size() > crypto_pwhash_argon2id_PASSWD_MAX) {
         throw std::invalid_argument("password is too long");
     }
+    static constexpr char empty_password = '\0';
+    const char* const password_ptr =
+        password.empty() ? &empty_password : reinterpret_cast<const char*>(password.data());
     // With the inputs validated above, crypto_pwhash only fails when it can't allocate mem_limit bytes.
-    if (crypto_pwhash(out_ptr(out), out.size(), reinterpret_cast<const char*>(password.data()), password.size(),
-                      in_ptr(salt), params.ops_limit, params.mem_limit, crypto_pwhash_ALG_ARGON2ID13) != 0) {
+    if (crypto_pwhash(out_ptr(out), out.size(), password_ptr, password.size(), in_ptr(salt), params.ops_limit,
+                      params.mem_limit, crypto_pwhash_ALG_ARGON2ID13) != 0) {
         throw std::bad_alloc();
     }
 }
