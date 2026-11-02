@@ -2,6 +2,7 @@ find_package(Catch2 3 CONFIG REQUIRED)
 find_package(unofficial-sqlite3 CONFIG REQUIRED)
 
 add_executable(cipherkeeper_tests
+    cli_test.cpp
     core_test.cpp
     crypto_test.cpp
     item_id_test.cpp
@@ -16,6 +17,7 @@ target_include_directories(cipherkeeper_tests PRIVATE ${PROJECT_SOURCE_DIR}/core
 target_link_libraries(cipherkeeper_tests
     PRIVATE
         cipherkeeper::core
+        cipherkeeper_cli_lib
         unofficial::sqlite3::sqlite3
         Catch2::Catch2WithMain
         ck_options
