@@ -7,6 +7,7 @@ add_executable(cipherkeeper_tests
     crypto_test.cpp
     item_id_test.cpp
     item_test.cpp
+    password_generator_test.cpp
     secure_buffer_test.cpp
     sodium_listener.cpp
     vault_test.cpp
