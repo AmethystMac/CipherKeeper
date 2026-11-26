@@ -177,7 +177,7 @@ void clear_field(const Field& field) {
 // The "Custom field name" loop shared by add and edit. An empty name ends it.
 void ask_new_custom_fields(Console& console, Item& item) {
     while (true) {
-        SecureString name = ask(console, prompt_text("Custom field name"), false);
+        SecureString name = ask(console, prompt_text("Custom field name", "empty to finish"), false);
         if (trim(name.view()).empty()) {
             return;
         }

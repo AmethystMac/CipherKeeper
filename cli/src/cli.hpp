@@ -47,7 +47,7 @@
 //   card:             Cardholder name, Brand, Number, Expiry, Security code
 //   identity:         First name, Middle name, Last name, Company, Email, Phone, Address line 1, Address line 2,
 //                     City, Region, Postal code, Country
-//   custom fields:    Custom field name (empty to finish), Hidden [y/N], Custom field value; repeated
+//   custom fields:    Custom field name [empty to finish], Hidden [y/N], Custom field value; repeated
 //   edit:             the same labels with the current value as the hint (never for secret fields), then
 //                     Value of "NAME" for each existing custom field, then the custom field loop for new ones.
 //                     An empty answer keeps a field, "-" clears it (or removes a custom field).

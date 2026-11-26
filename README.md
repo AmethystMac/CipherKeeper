@@ -37,11 +37,13 @@ them.
 
 ## Building
 
-You need:
-- **Windows:** Visual Studio 2022 with the "Desktop development with C++" workload (includes CMake and Ninja).
-- **Linux:** a C++20 compiler, CMake ≥ 3.25, Ninja, and the autotools vcpkg needs to build libsodium
-  (`sudo apt install ninja-build autoconf autoconf-archive automake libtool` on Debian/Ubuntu).
-- **vcpkg** (all platforms), with `VCPKG_ROOT` pointing at it:
+Dependencies (libsodium, SQLite, Catch2, Qt) come from **vcpkg** and are downloaded and compiled on the first
+configure. You only install the toolchain and vcpkg itself.
+
+### Windows
+
+1. Install Visual Studio 2022 with the "Desktop development with C++" workload. It includes CMake and Ninja.
+2. Get vcpkg:
 
 ```bash
 git clone https://github.com/microsoft/vcpkg.git C:/dev/vcpkg
@@ -51,24 +53,100 @@ git clone https://github.com/microsoft/vcpkg.git C:/dev/vcpkg
 C:/dev/vcpkg/bootstrap-vcpkg.bat -disableMetrics
 ```
 
-Then set the `VCPKG_ROOT` environment variable to `C:\dev\vcpkg`. On Linux, use `./bootstrap-vcpkg.sh` and
-`export VCPKG_ROOT=...`.
+3. Set the `VCPKG_ROOT` environment variable to `C:\dev\vcpkg`.
+4. Run the build commands below from a Visual Studio **x64** Native Tools prompt.
 
-Build and test from a Visual Studio "x64 Native Tools" prompt (Windows) or any shell (Linux):
+### Linux (Debian, Ubuntu, Raspberry Pi OS)
+
+1. Install a compiler, CMake, Ninja, git, the tools vcpkg needs to download and unpack packages, and the autotools
+   it uses to build libsodium:
+
+```bash
+sudo apt update
+```
+
+```bash
+sudo apt install build-essential cmake ninja-build git curl zip unzip tar pkg-config autoconf autoconf-archive automake libtool
+```
+
+   You need GCC 11 or newer and CMake 3.25 or newer. Check with `g++ --version` and `cmake --version`. Debian 12+,
+   Ubuntu 24.04+ and current Raspberry Pi OS have both. On Ubuntu 22.04 the packaged CMake (3.22) is too old: get a
+   newer one from [Kitware's APT repository](https://apt.kitware.com/) or `sudo snap install cmake --classic`.
+
+2. Optional, to check your code the way CI does (formatting and clang-tidy):
+
+```bash
+sudo apt install clang-format clang-tidy
+```
+
+3. Optional, only for the `gui-debug` preset (Qt needs the X11 and OpenGL headers):
+
+```bash
+sudo apt install '^libxcb.*-dev' libx11-xcb-dev libglu1-mesa-dev libxrender-dev libxi-dev libxkbcommon-dev libxkbcommon-x11-dev libegl1-mesa-dev python3
+```
+
+4. Get vcpkg:
+
+```bash
+git clone https://github.com/microsoft/vcpkg.git ~/vcpkg
+```
+
+```bash
+~/vcpkg/bootstrap-vcpkg.sh -disableMetrics
+```
+
+5. Point `VCPKG_ROOT` at it, in your shell profile so it survives new terminals:
+
+```bash
+echo 'export VCPKG_ROOT="$HOME/vcpkg"' >> ~/.bashrc
+```
+
+   **On ARM (Raspberry Pi, other aarch64 boards)**, vcpkg has no prebuilt CMake or Ninja to download and stops
+   unless you tell it to use the ones you installed with apt:
+
+```bash
+echo 'export VCPKG_FORCE_SYSTEM_BINARIES=1' >> ~/.bashrc
+```
+
+   Then open a new terminal (or run `source ~/.bashrc`) and check that `echo $VCPKG_ROOT` prints the path.
+
+6. Run the build commands below from the repository folder.
+
+### Build, test and run
+
+Run these in order. Each one needs the one before it to have run at least once.
+
+**1. Configure.** Sets up `build/debug/` and installs the dependencies through vcpkg. You only need it the first
+time, or after changing `CMakeLists.txt`, `CMakePresets.json` or `vcpkg.json`. The first run builds every dependency
+from source, which takes several minutes (much longer on a Raspberry Pi). Later runs reuse them.
 
 ```bash
 cmake --preset debug
 ```
 
+**2. Build.** Compiles the core library, the `ck` CLI and the tests. Run it again after every code change. It only
+recompiles what changed.
+
 ```bash
 cmake --build --preset debug
 ```
+
+**3. Test (optional).** Runs the test suite and shows the output of any test that fails. Skip it if you only want
+to use the CLI.
 
 ```bash
 ctest --preset debug
 ```
 
-The CLI ends up at `build/debug/cli/ck`. Visual Studio can also open the folder directly and pick up the presets.
+**4. Run.** The CLI ends up at `build/debug/cli/ck`. For example, this creates a vault (see
+[Using the CLI](#using-the-cli)):
+
+```bash
+./build/debug/cli/ck init
+```
+
+To use another preset from the table below, put its name in place of `debug` in all three commands. Visual Studio can
+also open the folder directly and pick up the presets.
 
 | Preset | What it builds |
 |---|---|

@@ -409,6 +409,13 @@ TEST_CASE("cli: add login stores every field") {
             CHECK_FALSE(console.asked_secretly(label));
         }
     }
+    SECTION("the custom field name prompt says how to finish the loop") {
+        const auto names = console.prompts_for("Custom field name");
+        REQUIRE(names.size() == 3);
+        for (const auto& prompt : names) {
+            CHECK(prompt.text == "Custom field name [empty to finish]: ");
+        }
+    }
     SECTION("the new item's ID is printed, and no secret is") {
         const std::vector<ck::ItemRecord> records = cli.open().list_items();
         REQUIRE(records.size() == 1);
