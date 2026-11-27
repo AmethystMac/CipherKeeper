@@ -3,16 +3,20 @@
 #include "item_fields.hpp"
 
 #include <cipherkeeper/crypto/secure_buffer.hpp>
+#include <cipherkeeper/generator/password_generator.hpp>
 #include <cipherkeeper/model/item.hpp>
 #include <cipherkeeper/model/item_codec.hpp>
 #include <cipherkeeper/model/item_id.hpp>
 
 #include <algorithm>
+#include <charconv>
 #include <cstddef>
 #include <filesystem>
 #include <functional>
 #include <iterator>
+#include <memory>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -177,7 +181,7 @@ void clear_field(const Field& field) {
 // The "Custom field name" loop shared by add and edit. An empty name ends it.
 void ask_new_custom_fields(Console& console, Item& item) {
     while (true) {
-        SecureString name = ask(console, prompt_text("Custom field name"), false);
+        SecureString name = ask(console, prompt_text("Custom field name", "empty to finish"), false);
         if (trim(name.view()).empty()) {
             return;
         }
@@ -604,6 +608,113 @@ Exit change_master_command(Context& ctx, Args args) {
     const SecureBuffer password = ask_new_master_password(ctx.console());
     vault.change_master_password(password, ctx.settings().kdf);
     ctx.console().err("Changed the master password\n");
+    return Exit::ok;
+}
+
+// -------------------------------------------------------------------------------------------------------------------
+// gen
+
+namespace {
+
+constexpr std::string_view gen_usage =
+    "usage: ck gen [--length N] [--no-lower] [--no-upper] [--no-digits] [--no-symbols] [--no-ambiguous] | --words N";
+
+// A whole decimal number: digits only, no sign or spaces. std::nullopt for anything else, including overflow.
+std::optional<std::size_t> parse_count(std::string_view text) {
+    std::size_t value = 0;
+    const char* const begin = std::to_address(text.begin());
+    const char* const end = std::to_address(text.end());
+    const auto [stop, error] = std::from_chars(begin, end, value);
+    if (text.empty() || error != std::errc{} || stop != end) {
+        return std::nullopt;
+    }
+    return value;
+}
+
+std::size_t parse_count_option(Args args, std::size_t& i) {
+    const std::string& option = args[i];
+    if (++i == args.size()) {
+        throw usage(option + " needs a number");
+    }
+    const std::optional<std::size_t> count = parse_count(args[i]);
+    if (!count) {
+        throw usage(option + " needs a whole number");
+    }
+    return *count;
+}
+
+// Checked here as well as in core so the message names the option that's wrong.
+void check_gen_options(const PasswordOptions& options) {
+    if (options.length == 0 || options.length > PasswordOptions::max_length) {
+        throw usage("--length must be between 1 and " + std::to_string(PasswordOptions::max_length));
+    }
+    const auto sets = static_cast<std::size_t>(options.lowercase) + static_cast<std::size_t>(options.uppercase) +
+                      static_cast<std::size_t>(options.digits) + static_cast<std::size_t>(options.symbols);
+    if (sets == 0) {
+        throw usage("every character set is turned off");
+    }
+    if (options.length < sets) {
+        throw usage("--length must be at least " + std::to_string(sets) + " to fit one character from each set");
+    }
+}
+
+void check_gen_options(const PassphraseOptions& options) {
+    if (options.word_count < PassphraseOptions::min_words || options.word_count > PassphraseOptions::max_words) {
+        throw usage("--words must be between " + std::to_string(PassphraseOptions::min_words) + " and " +
+                    std::to_string(PassphraseOptions::max_words));
+    }
+}
+
+} // namespace
+
+Exit gen_command(Context& ctx, Args args) {
+    PasswordOptions password;
+    std::optional<PassphraseOptions> passphrase;
+    bool character_option = false;
+    for (std::size_t i = 0; i < args.size(); ++i) {
+        const std::string& arg = args[i];
+        if (arg == "--words") {
+            passphrase = PassphraseOptions{.word_count = parse_count_option(args, i)};
+            continue;
+        }
+        if (arg == "--length") {
+            password.length = parse_count_option(args, i);
+        } else if (arg == "--no-lower") {
+            password.lowercase = false;
+        } else if (arg == "--no-upper") {
+            password.uppercase = false;
+        } else if (arg == "--no-digits") {
+            password.digits = false;
+        } else if (arg == "--no-symbols") {
+            password.symbols = false;
+        } else if (arg == "--no-ambiguous") {
+            password.exclude_ambiguous = true;
+        } else if (arg.starts_with("-")) {
+            throw usage("unknown option " + arg);
+        } else {
+            throw usage(std::string(gen_usage));
+        }
+        character_option = true;
+    }
+    if (passphrase && character_option) {
+        throw usage("--words can't be combined with --length or the --no-* options");
+    }
+
+    std::optional<SecureString> generated;
+    try {
+        if (passphrase) {
+            check_gen_options(*passphrase);
+            generated = generate_passphrase(*passphrase);
+        } else {
+            check_gen_options(password);
+            generated = generate_password(password);
+        }
+    } catch (const std::invalid_argument& e) {
+        throw usage(e.what()); // core's rules changed without the checks above; still a bad command line
+    }
+    // Printed straight from secure memory, never copied into a std::string.
+    ctx.console().out(generated->view());
+    ctx.console().out("\n");
     return Exit::ok;
 }
 

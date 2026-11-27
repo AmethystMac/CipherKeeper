@@ -27,6 +27,7 @@
 //   edit <query>                         change an item field by field
 //   rm [--yes] <query>                   delete an item, asking first unless --yes
 //   change-master                        change the master password; asks for the current one even inside unlock
+//   gen [OPTIONS]                        print one new password and a newline to stdout (see below)
 //   help, version
 //
 // Without --vault, Settings::default_vault is used.
@@ -47,7 +48,7 @@
 //   card:             Cardholder name, Brand, Number, Expiry, Security code
 //   identity:         First name, Middle name, Last name, Company, Email, Phone, Address line 1, Address line 2,
 //                     City, Region, Postal code, Country
-//   custom fields:    Custom field name (empty to finish), Hidden [y/N], Custom field value; repeated
+//   custom fields:    Custom field name [empty to finish], Hidden [y/N], Custom field value; repeated
 //   edit:             the same labels with the current value as the hint (never for secret fields), then
 //                     Value of "NAME" for each existing custom field, then the custom field loop for new ones.
 //                     An empty answer keeps a field, "-" clears it (or removes a custom field).
@@ -57,6 +58,18 @@
 // notes, category, tags, username, password, urls, totp_secret, cardholder_name, brand, number, expiry,
 // security_code, first_name, middle_name, last_name, company, email, phone, address_line1, address_line2, city,
 // region, postal_code, country, or else a custom field's name. A field that's empty or missing is an error.
+//
+// `gen` never opens or unlocks a vault, so it works without one, asks for nothing, and also works inside unlock.
+//   (no options)     20 characters from lowercase, uppercase, digits and symbols, at least one of each
+//   --length N       1 to 1024 characters
+//   --no-lower, --no-upper, --no-digits, --no-symbols
+//                    leave out that set
+//   --no-ambiguous   leave out the look-alikes  I l 1 O 0 |
+//   --words N        instead, a passphrase of N words (4 to 20) from the EFF large wordlist, joined by single spaces;
+//                    can't be combined with the options above
+// N is digits only. When an option is repeated, the last one wins. Exit::ok on success; Exit::usage (with nothing
+// on stdout) for an unknown option, an extra word, a missing or malformed number, a number out of range, --words mixed
+// with character options, every set turned off, or a length shorter than the number of sets turned on.
 namespace ck::cli {
 
 enum class Exit : std::uint8_t {

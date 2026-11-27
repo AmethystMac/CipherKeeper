@@ -2,14 +2,17 @@ find_package(unofficial-sodium CONFIG REQUIRED)
 find_package(unofficial-sqlite3 CONFIG REQUIRED)
 
 # Sources are grouped by feature, mirrored in include/cipherkeeper/:
-#   crypto/   key derivation, encryption, secure memory
-#   model/    vault item types
-#   storage/  the vault file and its SQLite access
+#   crypto/      key derivation, encryption, secure memory
+#   generator/   random passwords and passphrases
+#   model/       vault item types
+#   storage/     the vault file and its SQLite access
 add_library(cipherkeeper_core
     src/core.cpp
     src/crypto/crypto.cpp
     src/crypto/secure_buffer.cpp
     src/crypto/secure_string.cpp
+    src/generator/eff_large_wordlist.cpp
+    src/generator/password_generator.cpp
     src/model/item.cpp
     src/model/item_codec.cpp
     src/model/item_id.cpp

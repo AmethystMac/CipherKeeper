@@ -30,6 +30,12 @@ Commands:
   edit <query>                         change an item (empty keeps a field, "-" clears it)
   rm [--yes] <query>                   delete an item
   change-master                        change the master password
+  gen [OPTIONS]                        print a new random password (no vault needed)
+      --length N                       length, 1 to 1024 (default 20)
+      --no-lower, --no-upper           leave out lowercase or uppercase letters
+      --no-digits, --no-symbols        leave out digits or symbols
+      --no-ambiguous                   leave out look-alikes: I l 1 O 0 |
+      --words N                        a passphrase of N words (4 to 20) instead
   help                                 show this help
   version                              show version information
 
@@ -66,6 +72,7 @@ constexpr std::array commands{
     Command{.name = "edit", .run = edit_command, .in_session = true},
     Command{.name = "rm", .run = rm_command, .in_session = true},
     Command{.name = "change-master", .run = change_master_command, .in_session = true},
+    Command{.name = "gen", .run = gen_command, .in_session = true},
     Command{.name = "help", .run = help_command, .in_session = true},
     Command{.name = "version", .run = version_command, .in_session = true},
 };

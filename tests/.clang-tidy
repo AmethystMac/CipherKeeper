@@ -1,9 +1,14 @@
 # Catch2's TEST_CASE/REQUIRE macros expand to static registrars and do-while loops, and the optional-access check
 # can't see that a failed REQUIRE(opt.has_value()) ends the test.
+#
+# EnumCastOutOfRange is off because of Catch2, not our code. REQUIRE_FALSE and CHECK_FALSE combine two Catch2
+# flags, 1 and 4, into 5. No flag is named 5, so the check thinks the value is wrong, but combining flags like this
+# is normal, valid C++. It also only shows up on some code paths, so it can appear or vanish when a test changes.
 InheritParentConfig: true
 Checks: >
   -bugprone-unchecked-optional-access,
   -cert-err58-cpp,
+  -clang-analyzer-optin.core.EnumCastOutOfRange,
   -cppcoreguidelines-avoid-do-while,
   -cppcoreguidelines-avoid-non-const-global-variables,
   -misc-use-anonymous-namespace,

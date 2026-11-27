@@ -63,6 +63,8 @@ Exit get_command(Context& ctx, Args args);
 Exit edit_command(Context& ctx, Args args);
 Exit rm_command(Context& ctx, Args args);
 Exit change_master_command(Context& ctx, Args args);
+// Never touches the vault, so it works without one and asks for nothing.
+Exit gen_command(Context& ctx, Args args);
 
 [[nodiscard]] std::filesystem::path path_from_utf8(std::string_view text);
 [[nodiscard]] std::string path_to_utf8(const std::filesystem::path& path);
