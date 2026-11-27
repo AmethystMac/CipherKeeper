@@ -15,6 +15,10 @@ add_executable(cipherkeeper_tests
 # core/src holds private headers the tests need: crypto/crypto_internal.hpp for known-answer tests, and
 # storage/sqlite.hpp so vault tests can tamper with files directly.
 target_include_directories(cipherkeeper_tests PRIVATE ${PROJECT_SOURCE_DIR}/core/src)
+# The original EFF wordlist, so the passphrase tests can check the embedded copy against it.
+target_compile_definitions(cipherkeeper_tests
+    PRIVATE CK_EFF_WORDLIST_PATH="${PROJECT_SOURCE_DIR}/core/data/eff_large_wordlist.txt"
+)
 target_link_libraries(cipherkeeper_tests
     PRIVATE
         cipherkeeper::core

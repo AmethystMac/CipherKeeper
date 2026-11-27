@@ -8,6 +8,7 @@
 #include <array>
 #include <cstdint>
 #include <iterator>
+#include <span>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -85,6 +86,36 @@ SecureString generate_password(const PasswordOptions& options) {
             return SecureString(text);
         }
     }
+}
+
+// eff_large_wordlist() is defined in eff_large_wordlist.cpp.
+
+SecureString generate_passphrase(const PassphraseOptions& options) {
+    if (options.word_count < PassphraseOptions::min_words || options.word_count > PassphraseOptions::max_words) {
+        throw std::invalid_argument("generate_passphrase: word count must be between 4 and 20");
+    }
+
+    const std::span<const std::string_view> words = eff_large_wordlist();
+    const auto word_total = static_cast<std::uint32_t>(words.size());
+    const std::size_t longest = std::ranges::max(words, {}, [](std::string_view word) { return word.size(); }).size();
+
+    // Write straight into a SecureBuffer big enough for the longest possible result, then copy the used part into
+    // the SecureString; the scratch buffer is wiped when it goes out of scope. Only the chosen words' text is
+    // secret, so nothing else (no index list, no std::string) holds it.
+    SecureBuffer scratch((options.word_count * longest) + (options.word_count - 1));
+    std::size_t used = 0;
+    const auto append = [&](std::string_view text) {
+        std::ranges::copy(std::as_bytes(std::span(text)), scratch.bytes().subspan(used).begin());
+        used += text.size();
+    };
+    for (std::size_t i = 0; i < options.word_count; ++i) {
+        if (i != 0) {
+            append(passphrase_separator);
+        }
+        // randombytes_uniform: CSPRNG output in [0, 7776) without modulo bias.
+        append(words[randombytes_uniform(word_total)]);
+    }
+    return SecureString(std::string_view(reinterpret_cast<const char*>(scratch.data()), used));
 }
 
 } // namespace ck

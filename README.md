@@ -215,9 +215,16 @@ line, `3` wrong master password three times.
 ## Layout
 
 ```
-core/      libcipherkeeper: crypto, vault, item model, sync client (no Qt, no UI)
+core/      libcipherkeeper: crypto, vault, item model, password generator, sync client (no Qt, no UI)
+  data/    the EFF large wordlist used for passphrases
 cli/       command-line front end (ck)
 gui/       Qt 6 desktop app
 server/    sync server (Phase 3)
 tests/     Catch2 tests
 ```
+
+## Credits
+
+Passphrases use the [EFF large wordlist](https://www.eff.org/dice) by the Electronic Frontier Foundation, licensed
+under [CC BY 3.0 US](https://creativecommons.org/licenses/by/3.0/us/). `core/data/eff_large_wordlist.txt` is EFF's
+file, unchanged; `core/src/generator/eff_large_wordlist.cpp` holds the same words as a C++ table.
