@@ -172,6 +172,7 @@ ck [--vault PATH] <command> [arguments]
 | `edit <query>` | Change an item field by field. An empty answer keeps a field, `-` clears it |
 | `rm [--yes] <query>` | Delete an item, asking first unless you pass `--yes` |
 | `change-master` | Change the master password (asks for the current one, even inside `unlock`) |
+| `gen [options]` | Print a new random password or passphrase. Needs no vault and no master password |
 | `help`, `version` | Show usage or the version |
 
 A first run looks like this:
@@ -204,6 +205,23 @@ ck get --show bank
   or one of `title`, `notes`, `category`, `tags`, `username`, `password`, `urls`, `totp_secret`, `cardholder_name`,
   `brand`, `number`, `expiry`, `security_code`, `first_name`, `middle_name`, `last_name`, `company`, `email`,
   `phone`, `address_line1`, `address_line2`, `city`, `region`, `postal_code`, `country`.
+- **`ck gen`** prints one password and nothing else, so you can copy it or pipe it. With no options it's 20
+  characters with lowercase and uppercase letters, digits and symbols, at least one of each.
+  - `--length N` sets the length (1 to 1024).
+  - `--no-lower`, `--no-upper`, `--no-digits` and `--no-symbols` leave out a kind of character.
+  - `--no-ambiguous` leaves out look-alikes (`I l 1 O 0 |`).
+  - `--words N` prints a passphrase of N words (4 to 20) from the EFF wordlist, separated by spaces. It can't be
+    combined with the other options.
+
+  A bad option or an impossible setting (for example every kind turned off) exits with `2`.
+
+  ```bash
+  ck gen --length 32 --no-symbols
+  ```
+
+  ```bash
+  ck gen --words 6
+  ```
 
 **Where the vault lives.** `--vault PATH` if given, else `$CK_VAULT`, else `vault.ckvault` in your user data
 folder: `%LOCALAPPDATA%\CipherKeeper` on Windows, `~/Library/Application Support/CipherKeeper` on macOS and

@@ -1,6 +1,7 @@
 #include "cli.hpp"
 #include "test_util.hpp"
 
+#include <cipherkeeper/generator/password_generator.hpp>
 #include <cipherkeeper/model/item.hpp>
 #include <cipherkeeper/model/item_codec.hpp>
 #include <cipherkeeper/storage/vault.hpp>
@@ -183,7 +184,7 @@ TEST_CASE("cli: help and version") {
 
     SECTION("help prints the commands") {
         REQUIRE(cli.run_raw(console, {"help"}) == Exit::ok);
-        for (const char* command : {"init", "unlock", "add", "list", "get", "edit", "rm", "change-master"}) {
+        for (const char* command : {"init", "unlock", "add", "list", "get", "edit", "rm", "change-master", "gen"}) {
             CHECK(console.output().find(command) != std::string::npos);
         }
     }
@@ -919,6 +920,233 @@ TEST_CASE("cli: unlock reports errors and keeps going") {
         CHECK_FALSE(console.asked("New master password"));
         CHECK(Vault::open(cli.vault, secret(master)).has_value());
     }
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// gen
+
+namespace {
+
+constexpr std::string_view lowercase = "abcdefghijklmnopqrstuvwxyz";
+constexpr std::string_view uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+constexpr std::string_view digits = "0123456789";
+constexpr std::string_view symbols = R"(!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~)";
+constexpr std::string_view ambiguous = "Il1O0|";
+
+bool has_any(std::string_view text, std::string_view set) {
+    return text.find_first_of(set) != std::string_view::npos;
+}
+
+bool only_from(std::string_view text, std::string_view set) {
+    return text.find_first_not_of(set) == std::string_view::npos;
+}
+
+std::string all_sets() {
+    return std::string(lowercase) + std::string(uppercase) + std::string(digits) + std::string(symbols);
+}
+
+// Runs `ck gen ARGS` and returns the one line it printed, without its newline. It must succeed quietly and without a
+// single prompt.
+std::string gen(const Cli& cli, std::vector<std::string> args) {
+    ScriptedConsole console;
+    args.insert(args.begin(), "gen");
+    REQUIRE(cli.run(console, args) == Exit::ok);
+    CHECK(console.errors().empty());
+    CHECK(console.prompts().empty());
+    const std::string& out = console.output();
+    REQUIRE(out.ends_with('\n'));
+    REQUIRE(std::ranges::count(out, '\n') == 1);
+    return out.substr(0, out.size() - 1);
+}
+
+// Splits on every single space, so a doubled, leading or trailing space shows up as an empty word.
+std::vector<std::string> split_on_spaces(std::string_view text) {
+    std::vector<std::string> words;
+    while (true) {
+        const std::size_t end = text.find(' ');
+        words.emplace_back(text.substr(0, end));
+        if (end == std::string_view::npos) {
+            return words;
+        }
+        text.remove_prefix(end + 1);
+    }
+}
+
+bool is_eff_word(std::string_view word) {
+    return std::ranges::binary_search(ck::eff_large_wordlist(), word);
+}
+
+std::string joined(const std::vector<std::string>& args) {
+    std::string text;
+    for (const std::string& arg : args) {
+        text += " [" + arg + "]";
+    }
+    return text;
+}
+
+} // namespace
+
+TEST_CASE("cli: gen prints one password with the default settings") {
+    const Cli cli;
+    const std::string password = gen(cli, {});
+    CHECK(password.size() == 20);
+    CHECK(only_from(password, all_sets()));
+    CHECK(has_any(password, lowercase));
+    CHECK(has_any(password, uppercase));
+    CHECK(has_any(password, digits));
+    CHECK(has_any(password, symbols));
+}
+
+TEST_CASE("cli: gen needs no vault and never unlocks one") {
+    const Cli cli;
+
+    SECTION("no vault anywhere") {
+        (void)gen(cli, {});
+        CHECK_FALSE(std::filesystem::exists(cli.vault));
+        ScriptedConsole console;
+        REQUIRE(cli.run_raw(console, {"gen"}) == Exit::ok);
+        CHECK(console.prompts().empty());
+        CHECK_FALSE(std::filesystem::exists(cli.settings.default_vault));
+        CHECK_FALSE(std::filesystem::exists(cli.settings.default_vault.parent_path()));
+    }
+    SECTION("a vault exists but isn't unlocked") {
+        cli.make_vault();
+        (void)gen(cli, {"--words", "6"}); // gen() checks that nothing was asked
+    }
+}
+
+TEST_CASE("cli: gen --length sets the length") {
+    const Cli cli;
+    for (const std::size_t length : {4U, 5U, 64U, 1024U}) {
+        INFO("length " << length);
+        const std::string password = gen(cli, {"--length", std::to_string(length)});
+        CHECK(password.size() == length);
+        CHECK(only_from(password, all_sets()));
+    }
+    SECTION("one character from a single set") {
+        const std::string password = gen(cli, {"--length", "1", "--no-upper", "--no-digits", "--no-symbols"});
+        CHECK(password.size() == 1);
+        CHECK(only_from(password, lowercase));
+    }
+    SECTION("the last --length wins") {
+        CHECK(gen(cli, {"--length", "8", "--length", "30"}).size() == 30);
+    }
+}
+
+TEST_CASE("cli: gen leaves out the sets it's told to") {
+    const Cli cli;
+    struct Case {
+        const char* flag;
+        std::string_view set;
+    };
+    for (const Case& c : {Case{.flag = "--no-lower", .set = lowercase}, Case{.flag = "--no-upper", .set = uppercase},
+                          Case{.flag = "--no-digits", .set = digits}, Case{.flag = "--no-symbols", .set = symbols}}) {
+        INFO(c.flag);
+        const std::string password = gen(cli, {c.flag, "--length", "1024"});
+        CHECK(password.size() == 1024);
+        CHECK_FALSE(has_any(password, c.set));
+        for (const std::string_view other : {lowercase, uppercase, digits, symbols}) {
+            if (other != c.set) {
+                CHECK(has_any(password, other));
+            }
+        }
+    }
+    SECTION("--no-ambiguous") {
+        const std::string password = gen(cli, {"--no-ambiguous", "--length", "1024"});
+        CHECK_FALSE(has_any(password, ambiguous));
+        CHECK(has_any(password, symbols));
+    }
+    SECTION("flags combine") {
+        const std::string password = gen(cli, {"--no-symbols", "--no-digits", "--no-ambiguous", "--length", "512"});
+        CHECK(only_from(password, std::string(lowercase) + std::string(uppercase)));
+        CHECK_FALSE(has_any(password, ambiguous));
+    }
+}
+
+TEST_CASE("cli: gen --words prints a passphrase of EFF words") {
+    const Cli cli;
+    for (const std::size_t count : {4U, 8U, 20U}) {
+        INFO("words " << count);
+        const std::string passphrase = gen(cli, {"--words", std::to_string(count)});
+        const std::vector<std::string> words = split_on_spaces(passphrase);
+        CHECK(words.size() == count);
+        for (const std::string& word : words) {
+            INFO("word \"" << word << "\"");
+            CHECK(is_eff_word(word));
+        }
+    }
+}
+
+TEST_CASE("cli: gen gives a different result each time") {
+    const Cli cli;
+    CHECK(gen(cli, {}) != gen(cli, {}));
+    CHECK(gen(cli, {"--words", "8"}) != gen(cli, {"--words", "8"}));
+}
+
+TEST_CASE("cli: bad gen command lines are usage errors") {
+    const Cli cli;
+    const std::vector<std::vector<std::string>> bad = {
+        // missing or malformed numbers
+        {"--length"},
+        {"--length", ""},
+        {"--length", "abc"},
+        {"--length", "12abc"},
+        {"--length", "-5"},
+        {"--length", "+5"},
+        {"--length", " 5"},
+        {"--length", "99999999999999999999999999"},
+        {"--words"},
+        {"--words", "x"},
+        // out of range
+        {"--length", "0"},
+        {"--length", "1025"},
+        {"--words", "0"},
+        {"--words", "3"},
+        {"--words", "21"},
+        // impossible character settings
+        {"--no-lower", "--no-upper", "--no-digits", "--no-symbols"},
+        {"--length", "3"},
+        {"--length", "1", "--no-upper"},
+        // --words doesn't mix with character options
+        {"--words", "8", "--length", "20"},
+        {"--length", "20", "--words", "8"},
+        {"--words", "8", "--no-symbols"},
+        {"--no-ambiguous", "--words", "8"},
+        // unknown options and stray words
+        {"--frobnicate"},
+        {"-l", "8"},
+        {"extra"},
+        {"--length", "8", "extra"},
+    };
+    for (const std::vector<std::string>& args : bad) {
+        INFO("ck gen" << joined(args));
+        ScriptedConsole console;
+        std::vector<std::string> line = args;
+        line.insert(line.begin(), "gen");
+        CHECK(cli.run(console, line) == Exit::usage);
+        CHECK(console.output().empty());
+        CHECK_FALSE(console.errors().empty());
+        CHECK(console.prompts().empty());
+    }
+}
+
+TEST_CASE("cli: gen works inside unlock") {
+    const Cli cli;
+    cli.make_vault();
+    ScriptedConsole console;
+    answer_master(console);
+    console.answer("ck", {"gen --length 0", "gen --length 12", "gen --words 5"});
+
+    REQUIRE(cli.run(console, {"unlock"}) == Exit::ok);
+    CHECK(console.prompts_for("Master password").size() == 1);
+    CHECK(console.errors().find("--length") != std::string::npos);
+    const std::string& out = console.output();
+    const std::size_t first_end = out.find('\n');
+    REQUIRE(first_end != std::string::npos);
+    CHECK(first_end == 12);
+    const std::string second = out.substr(first_end + 1);
+    REQUIRE(second.ends_with('\n'));
+    CHECK(split_on_spaces(second.substr(0, second.size() - 1)).size() == 5);
 }
 
 // ---------------------------------------------------------------------------------------------------------------
